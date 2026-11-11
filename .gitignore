@@ -1,0 +1,20 @@
+# Training outputs (large / regenerated on each run)
+scheme/weights/
+scheme/predicts/
+scheme/classes2/
+scheme/classes4/
+scheme/runs/
+noscheme/weights/
+noscheme/predicts/
+*.pth
+*.pt
+
+# Python / notebooks
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data (download from Kaggle instead)
+clean_gzdata5/
+images_training_rev1/
+*.zip
