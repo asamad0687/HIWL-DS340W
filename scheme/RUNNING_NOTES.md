@@ -3,7 +3,7 @@
 This repo is forked from the original authors' code for:
 "Galaxy Image Classification Using Hierarchical Data Learning with Weighted Sampling and Label Smoothing" (Ma et al., MNRAS 2023).
 
-I ran this code in a **Kaggle Notebook** (GPU: T4 x2) to reproduce the parent paper's data preparation and training pipeline for DS 340W (Group [XX]).
+I ran this code in a **Kaggle Notebook** (GPU: T4 x2) to reproduce the parent paper's data preparation and training pipeline for DS 340W (Abdul Samad, solo project).
 
 ## Environment Setup Notes
 
@@ -30,3 +30,20 @@ I ran this code in a **Kaggle Notebook** (GPU: T4 x2) to reproduce the parent pa
 3. **`pytorchtools.py`:** This file was missing from the original repo. It is a standard, widely-used `EarlyStopping` utility (based on the common `early-stopping-pytorch` implementation) that `train_efficientnet.py` depends on but was not included in the original upload. I added it here so the code runs as intended.
 
 4. **Running `train_efficientnet.py`:** Since pretrained weights and the original local dataset path aren't available in this environment, the script was run with the following command-line arguments (no changes to the script's internal logic):
+
+```bash
+python train_efficientnet.py --data-path5 /kaggle/working/clean_gzdata5 --weights4 "" --weights2 "" --os linux --device cuda:0 --num-model B1
+```
+
+   - `--weights4 ""` / `--weights2 ""`: the authors' EfficientNet-B1 pretrained weights are only hosted on Baidu Pan (see `pretrain url.txt`), so both models train from scratch.
+   - `--os linux`: turns on DataLoader workers (on Windows the script sets them to 0).
+   - `--num-model B1`: the EfficientNet-B1 backbone the paper uses for its main HIWL results (240x240 input).
+
+5. **`evaluate_metrics.py` (added):** `train_efficientnet.py` only prints the overall test accuracy. To compare against the paper's Table 3 (confusion matrix) and Table 4 (recall / precision / F1), this script reads `predicts/B1/test_pred_all.pth`, rebuilds the same seeded 8:1:1 split with the authors' `read_split_data`, and prints the metrics next to the paper's values. It doesn't retrain anything or change the authors' code.
+
+```bash
+python evaluate_metrics.py --data-path5 /kaggle/working/clean_gzdata5 --num-model B1
+```
+
+6. **Split naming:** in the authors' code, the split they call `val` is used to pick the best model pair, and the split they call `test` gives the final reported accuracy. The notebook's last data cell saves them as `test_set.csv` (authors' val) and `validation_unseen_set.csv` (authors' test, the one the paper reports).
+
