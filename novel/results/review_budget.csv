@@ -1,0 +1,16 @@
+method,review_budget,images_reviewed,errors_caught,pct_errors_caught,accuracy_after_review,accuracy_of_unflagged
+Max probability (MSP),0.05,144,63,0.7326,0.9920,0.9916
+Max probability (MSP),0.10,288,76,0.8837,0.9965,0.9961
+Max probability (MSP),0.20,576,81,0.9419,0.9983,0.9978
+Margin (top-1 minus top-2),0.05,144,63,0.7326,0.9920,0.9916
+Margin (top-1 minus top-2),0.10,288,76,0.8837,0.9965,0.9961
+Margin (top-1 minus top-2),0.20,576,81,0.9419,0.9983,0.9978
+Entropy,0.05,144,64,0.7442,0.9924,0.9920
+Entropy,0.10,288,76,0.8837,0.9965,0.9961
+Entropy,0.20,576,81,0.9419,0.9983,0.9978
+Stability (8 flips/rotations),0.05,144,58,0.6744,0.9903,0.9898
+Stability (8 flips/rotations),0.10,288,79,0.9186,0.9976,0.9973
+Stability (8 flips/rotations),0.20,576,84,0.9767,0.9993,0.9991
+TTA-averaged confidence,0.05,144,47,0.5465,0.9865,0.9858
+TTA-averaged confidence,0.10,288,76,0.8837,0.9965,0.9961
+TTA-averaged confidence,0.20,576,85,0.9884,0.9997,0.9996

@@ -1,0 +1,7 @@
+method,auroc_error_detection,errors_caught_5pct,errors_caught_10pct,errors_caught_20pct
+Random review (baseline),0.500,0.050,0.100,0.200
+Max probability (MSP),0.963,0.733,0.884,0.942
+Margin (top-1 minus top-2),0.963,0.733,0.884,0.942
+Entropy,0.963,0.744,0.884,0.942
+Stability (8 flips/rotations),0.970,0.674,0.919,0.977
+TTA-averaged confidence,0.958,0.547,0.884,0.988
