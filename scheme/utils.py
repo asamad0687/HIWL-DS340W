@@ -43,6 +43,24 @@ class SMLoss(nn.Module):
         return loss.mean()
 
 def read_split_data(root: str, val_rate: float = 0.1, test_rate: float = 0.1):
+    split_dir = os.environ.get("HIWL_SPLIT_DIR", "")
+    if split_dir:  # DS340W: use the saved, fixed split
+        import csv
+        def _load(name):
+            paths, labels = [], []
+            with open(os.path.join(split_dir, name)) as fh:
+                for r in csv.DictReader(fh):
+                    rel = "/".join(r["path"].replace("\\", "/").split("/")[-2:])  # class/file.jpg
+                    paths.append(os.path.join(root, rel))
+                    labels.append(int(r["label"]))
+            return paths, labels
+        tr, trl = _load("train_set.csv")
+        va, val = _load("test_set.csv")                 # authors' "val"  = assignment Test set
+        te, tel = _load("validation_unseen_set.csv")    # authors' "test" = assignment Validation (unseen) set
+        missing = [q for q in tr + va + te if not os.path.exists(q)]
+        assert not missing, "{} split images not found, e.g. {}".format(len(missing), missing[:3])
+        print("Using saved split from {}: {} train, {} val, {} test".format(split_dir, len(tr), len(va), len(te)))
+        return tr, trl, va, val, te, tel
     split_rate = val_rate + test_rate
     random.seed(0)  # 保证随机结果可复现
     assert os.path.exists(root), "dataset root: {} does not exist.".format(root)
