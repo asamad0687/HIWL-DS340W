@@ -1,13 +1,13 @@
 {
   "n_test": 2881,
-  "errors": 86,
-  "accuracy": 0.9701492537313433,
-  "accuracy_tta": 0.973967372440125,
+  "errors": 137,
+  "accuracy": 0.9524470669906282,
+  "accuracy_tta": 0.9604304061089899,
   "parent_paper_accuracy": 0.9632,
-  "agreement_with_reproduction_run": 0.9402985074626866,
-  "mean_msp_correct": 0.9786083698272705,
-  "mean_msp_wrong": 0.6996723413467407,
-  "mean_stability_correct": 0.9819767441860465,
-  "mean_stability_wrong": 0.5930232558139535,
-  "share_fully_stable": 0.9173897952099965
+  "agreement_with_reproduction_run": 1.0,
+  "mean_msp_correct": 0.9787910580635071,
+  "mean_msp_wrong": 0.7751399278640747,
+  "mean_stability_correct": 0.983555029154519,
+  "mean_stability_wrong": 0.6697080291970803,
+  "share_fully_stable": 0.9104477611940298
 }
