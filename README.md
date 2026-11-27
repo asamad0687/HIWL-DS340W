@@ -79,9 +79,30 @@ The reproduction comes within **+0.17 percentage points** of the paper's overall
 | SPI | 0.9834 | 0.9834 | 0.9834 |
 | Avg | 0.9156 | 0.9302 | 0.9227 |
 
-My per-class numbers come from `scheme/evaluate_metrics.py`, which is Step 7 in the notebook. It has to run in the same Kaggle session as training, because the authors' split depends on the folder listing order. It will be included in the next full run, which is also the base for the novel approach.
+### Rerun on the saved split (final numbers)
+
+The authors' split depends on the folder listing order, so it can't be rebuilt in a new session. To get results on a fixed split, HIWL was retrained once on the saved split in [`splits/`](splits/) ([`notebooks/ds340w_hiwl_rerun.ipynb`](notebooks/ds340w_hiwl_rerun.ipynb), about 8.9 hours on GPU T4 x2). Training log: `acc_combine_best: 0.9680, acc_combine_best_index: (0, 0), test_acc: 0.9524`.
+
+| Class | Recall (paper) | Precision (paper) | F1 (paper) |
+|---|---|---|---|
+| CRS | 0.9704 (0.9633) | 0.9523 (0.9679) | 0.9613 (0.9656) |
+| IBS | 0.9517 (0.9628) | 0.9540 (0.9499) | 0.9529 (0.9563) |
+| CSS | 0.6034 (0.7069) | 0.5833 (0.7855) | 0.5932 (0.7455) |
+| EO  | 0.9309 (0.9616) | 0.9381 (0.9641) | 0.9345 (0.9629) |
+| SPI | 0.9706 (0.9834) | 0.9870 (0.9834) | 0.9787 (0.9834) |
+| Avg | 0.8854 (0.9156) | 0.8830 (0.9302) | 0.8841 (0.9227) |
+
+Overall test accuracy on the saved split is **95.24%** (paper: 96.32%). These are the numbers the novel approach builds on; see [`novel/`](novel/).
 
 **Why small differences are expected:** the authors' pretrained EfficientNet-B1 weights are only on Baidu Pan, so both models here train **from scratch** (`--weights4 "" --weights2 ""`). On top of that, GPU nondeterminism and Kaggle's newer PyTorch / torchvision versions can shift results a little. As in the paper, the cigar-shaped class (CSS, only 58 test images) is the hardest and the most variable.
+
+---
+
+## Kaggle notebooks
+
+- Reproduction: [DS340W](https://www.kaggle.com/code/abduls135/ds340w)
+- Rerun on the saved split + novel approach (final results): [DS340W HIWL Rerun](https://www.kaggle.com/code/abduls135/ds340w-hiwl-rerun)
+- First (preliminary) novel-approach run: [DS340W Novel Approach](https://www.kaggle.com/code/abduls135/ds340w-novel-approach)
 
 ---
 
@@ -100,8 +121,10 @@ HIWL-DS340W/
 │   └── RUNNING_NOTES.md         #   reproduction environment notes (added)
 ├── noscheme/                    # Baseline models without HIWL (authors')
 ├── notebooks/
-│   └── ds340w_hiwl_reproduction.ipynb   # Kaggle notebook, run top to bottom
-├── novel/                       # Novel approach: confidence + stability (in progress)
+│   ├── ds340w_hiwl_reproduction.ipynb   # Kaggle notebook, run top to bottom
+│   └── ds340w_hiwl_rerun.ipynb          # Retrain on the saved split + novel approach (final results)
+├── novel/                       # Novel approach: confidence scoring + prediction stability (final results in novel/results)
+├── splits/                      # Saved train / test / validation split used for the final results
 ├── requirements.txt             # authors' original versions (Kaggle's preinstalled versions were used)
 └── pretrain url.txt             # authors' pretrained-weight links
 ```
