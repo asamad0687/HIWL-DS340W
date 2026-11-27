@@ -2,13 +2,15 @@
 
 **Working title:** *Knowing When the Model Is Unsure: Confidence Scoring and Prediction Stability for Galaxy Morphology Classification*
 
-This folder holds the DS 340W novel-approach code. It's built **on top of** the reproduced HIWL pipeline in `../scheme/`. It doesn't retrain the model or change the authors' code. It only changes the **inference / evaluation block**: instead of keeping just HIWL's final class, it keeps the model's probabilities and uses them to flag the galaxies the model is unsure about.
+This folder holds the DS 340W novel-approach code. It's built **on top of** the HIWL pipeline in `../scheme/` and only changes the **inference / evaluation stage**: instead of keeping just HIWL's final class, it keeps the model's probabilities and uses them to flag the galaxies the model is unsure about, so a human can review them.
 
 | File | What it is |
 |---|---|
-| `hiwl_uncertainty.py` | The novel-approach script (loads the saved HIWL models, scores every test galaxy, writes the results) |
-| `ds340w_novel_approach.ipynb` | The Kaggle notebook that runs it (Kaggle: *DS340W Novel Approach*, GPU T4 x2, about 2 minutes) |
-| `results/` | Output tables from the Kaggle run |
+| `hiwl_uncertainty.py` | The novel-approach script (loads the trained HIWL models, scores every test galaxy, writes the results) |
+| `results/` | **Final results** from the rerun on the saved split (see below) |
+| `ds340w_novel_approach.ipynb` | The first, preliminary Kaggle run (superseded by the rerun; kept for the record) |
+
+The final results come from **`../notebooks/ds340w_hiwl_rerun.ipynb`** (Kaggle: [DS340W HIWL Rerun](https://www.kaggle.com/code/abduls135/ds340w-hiwl-rerun)), which retrains HIWL on the saved split and then runs this script.
 
 ## How it works
 
@@ -17,7 +19,7 @@ HIWL is hierarchical. **Model 4** sorts a galaxy into 4 groups (in-between smoot
 - P(IBS), P(CRS), P(SPI) come from Model 4
 - P(CSS) = P4(cigar-or-edge-on) × P2(cigar), and P(EO) = P4(cigar-or-edge-on) × P2(edge-on)
 
-The predicted class follows the authors' rule in `utils.evaluateall` exactly (checked against it).
+The predicted class follows the authors' rule in `utils.evaluateall` exactly, so the uncertainty layer never changes what HIWL predicts.
 
 **Five ways to flag uncertain predictions** (the comparison):
 
@@ -29,38 +31,45 @@ The predicted class follows the authors' rule in `utils.evaluateall` exactly (ch
 | Stability | Re-run the galaxy with 8 exact flips/rotations. How often does the answer stay the same? |
 | TTA-averaged confidence | MSP after averaging the 8 flipped/rotated predictions |
 
-**Human review budget:** sort galaxies from least to most confident, send only the bottom 5%, 10% or 20% to a human, and count how many of the model's mistakes that catches.
+**Human review budget:** sort galaxies from least to most confident, send only the bottom 5%, 10% or 20% to a human, and count how many of the model's mistakes that catches. **AUROC** measures how well each score separates wrong predictions from correct ones (0.5 = random, 1.0 = perfect).
 
 ## How to run (Kaggle)
 
-1. New notebook → add the **DS340W** reproduction notebook's output as Input (it has `weights/B1/best_model4_0.pth`, `best_model2_0.pth` and `clean_gzdata5`).
-2. GPU T4 x2 on → import `ds340w_novel_approach.ipynb` → Run All.
+1. New notebook → import `../notebooks/ds340w_hiwl_rerun.ipynb`.
+2. Add Input: the **DS340W** reproduction notebook's output (for `clean_gzdata5`). GPU T4 x2, Internet on.
+3. Save & Run All. Training takes about 8.5–9 hours; the uncertainty step takes about 2 minutes.
 
-Or directly, from `scheme/`:
+The notebook sets `HIWL_SPLIT_DIR` so every script uses the saved split in `../splits/`. It also picks the saved checkpoints that reproduce HIWL's own final test predictions (100% agreement), and runs:
+
 ```bash
-python ../novel/hiwl_uncertainty.py --data-path5 <clean_gzdata5> --weights-dir <.../weights/B1> \
-    --ref-pred <.../predicts/B1/test_pred_all.pth> --out-dir results_novel
+python ../novel/hiwl_uncertainty.py --data-path5 <clean_gzdata5> --weights-dir <best_pair> \
+    --ref-pred predicts/B1/test_pred_all.pth --out-dir results_novel
 ```
 
-## Preliminary results (2,881 test galaxies, 86 errors)
+To skip training, add the *DS340W HIWL Rerun* notebook's output as Input and run only the last step with `--weights-dir` pointing to its `best_pair/` folder.
+
+## Results (2,881 unseen test galaxies, 137 errors)
+
+All test galaxies come from `splits/validation_unseen_set.csv` and were never used for training or model selection.
+
+**HIWL itself (retrained):** accuracy **95.24%** (paper: 96.32%). Per-class metrics are in `results/hiwl_metrics_B1.csv` and the confusion matrix in `results/hiwl_confusion_matrix.csv`. Cigar-shaped recall is the lowest (0.60 vs. 0.71 in the paper), mostly confused with edge-on.
+
+**Uncertainty methods:**
 
 | Method | AUROC (error detection) | Errors caught, review 5% | Review 10% | Review 20% |
 |---|---|---|---|---|
 | Random review (baseline) | 0.500 | 5.0% | 10.0% | 20.0% |
-| Max probability (MSP) | 0.963 | 73.3% | 88.4% | 94.2% |
-| Margin | 0.963 | 73.3% | 88.4% | 94.2% |
-| Entropy | 0.963 | **74.4%** | 88.4% | 94.2% |
-| Stability (8 flips/rotations) | **0.970** | 67.4% | **91.9%** | 97.7% |
-| TTA-averaged confidence | 0.958 | 54.7% | 88.4% | **98.8%** |
+| Max probability (MSP) | 0.931 | 47.4% | 70.8% | 89.1% |
+| Margin | 0.931 | 48.2% | 70.8% | 89.1% |
+| Entropy | 0.931 | 48.2% | 71.5% | 89.1% |
+| Stability (8 flips/rotations) | **0.954** | **52.6%** | **81.0%** | 94.2% |
+| TTA-averaged confidence | **0.954** | 49.6% | 77.4% | **94.9%** |
 
-- **Accuracy:** HIWL 97.01% → **97.40%** when the 8 flipped/rotated predictions are averaged (+0.39 points, no retraining).
-- **Confidence tracks correctness:** mean MSP is 0.979 for correct predictions vs. 0.700 for wrong ones; mean stability is 0.982 vs. 0.593.
-- **Cigar-shaped galaxies (CSS) are flagged most:** they're 2% of the test set but 12.5% of the least-confident 10%, and that slice catches 17 of their 19 errors.
+- **Stability is the strongest signal:** reviewing the least stable 10% catches 111 of 137 errors (vs. 97 for max probability, and about 14 for random review).
+- **Accuracy without retraining:** averaging the 8 flipped/rotated predictions raises accuracy from 95.24% to **96.04%** (+0.80 points).
+- **Confidence tracks correctness:** mean max probability is 0.979 for correct predictions vs. 0.775 for wrong ones; mean stability is 0.984 vs. 0.670.
+- **Cigar-shaped galaxies (CSS) are flagged most:** 2% of the test set but 11.1% of the least-confident 10%, which contains 18 of their 23 errors.
 
-### Important caveat: the test split
+## Note on the earlier preliminary run
 
-The authors' `read_split_data` picks the test images from the order `os.listdir` returns. The reproduction ran on a working-disk folder whose order depends on that session's disk, so it **can't be rebuilt** in a new session. (Rebuilding the folder on `/kaggle/working` gave 95% agreement, not 100%.)
-
-Here the split is rebuilt from the read-only Input folder, which lists files in sorted order, so **anyone re-running this gets the same split**. But it's a different 10% than the reproduction's test set (94.0% prediction agreement with the reproduction run), so many of these images were seen during training. That's why accuracy is 97.0% rather than the reproduction's 96.49%.
-
-All methods are compared on the same images, so the **ranking between methods** is a fair comparison. The **absolute numbers are preliminary and likely optimistic**. Planned fix: retrain HIWL once with this fixed, saved split.
+The first run (`ds340w_novel_approach.ipynb`) evaluated the models on a split rebuilt from the sorted file list, because the authors' `read_split_data` picks images by `os.listdir` order and that order changed between Kaggle sessions. Many of those test images had been seen in training, so its numbers (97.01% accuracy, AUROC up to 0.970) were optimistic. The rerun fixes this by training and testing on the saved split in `../splits/`.
